@@ -1,0 +1,32 @@
+* Weekly meeting
+  SCHEDULED: <2020-11-01 Sun 09:00 +1w>
+
+* Glenn's tasks
+** Get familiar with Emacs
+  [[info:Emacs][Emacs introduction]]
+
+*** TODO Short term goals ( week 1 )
+    DEADLINE: <2020-11-01 Sun>
+
+  - Create a buffer
+  - Save a file
+
+*** Learn Org Mode
+  [[info:org][Org Mode manual]]
+
+  
+* Doug's tasks
+** Manage weekly meeting
+*** DONE Fix settings to share screen in Google Meetup.
+
+*** TODO Create repository for this.
+    DEADLINE: <2020-10-26 Mon>
+  To keep in sync with our goals let's use an org mode file shared on GitHub.
+
+** Wikidata Senators
+*** TODO Figure out what's missing from old upload to full upload.
+    SCHEDULED: <2020-11-01 Sun>
+  
+
+* Useful links
+  - [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][emacs reference card]]
