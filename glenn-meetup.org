@@ -1,5 +1,6 @@
 * Weekly meeting
   SCHEDULED: <2020-11-01 Sun 09:00 +1w>
+  [[https://meet.google.com/ody-sudr-hem][Google meetup]]
 
 * Glenn's tasks
 ** Get familiar with Emacs
