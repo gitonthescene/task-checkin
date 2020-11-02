@@ -31,7 +31,8 @@
     :PROPERTIES:
     :ID:       897CEA32-164A-43A8-8268-5BC30AE2347C
     :END:
-  To keep in sync with our goals let's use an org mode file shared on GitHub.
+  To keep in sync with our goals let's use an org mode file shared on GitHub.  This doc is found in
+  [[https://github.com/gitonthescene/task-checkin][this repository]].
 
 ** Wikidata Senators
   This is a project to upload all historical senator data from [[https://bioguideretro.congress.gov/][US government sources]] to [[https://www.wikidata.org/wiki/Wikidata:WikiProject_every_politician/United_States_of_America][Wikidata]].
