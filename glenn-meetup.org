@@ -9,6 +9,14 @@
 ** Get familiar with Emacs
   [[info:Emacs][Emacs introduction]]
 
+** TODO Short term goals ( week 2 )
+    DEADLINE: <2020-15-11 Sun>
+
+  - Learn basic github functions
+    - [[https://git-scm.com/videos][Git videos]]
+    - [[https://git-scm.com/book/en/v2][Git book]]
+  - Make a pull request for Doug to see changes
+
 *** TODO Short term goals ( week 1 )
     DEADLINE: <2020-11-01 Sun>
     :PROPERTIES:
@@ -20,7 +28,7 @@
 
 *** Learn Org Mode
   [[info:org][Org Mode manual]]
-
+  
   
 * Doug's tasks
 ** Manage weekly meeting
