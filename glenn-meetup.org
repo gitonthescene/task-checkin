@@ -54,13 +54,54 @@
       ?statement ps:P39/wd:Q21514624* wd:Q4416090.
     }
     #+end_src
+  - Here are all the statements that need deleting.  Specifically those which use =United States
+    senator (116th Congress)=
 
-*** TODO Figure out what's missing from old upload to full upload.
+    #+begin_src sql
+    SELECT ?sen ?senLabel ?positionLabel ?statement WHERE {
+      ?sen p:P39 ?statement.
+      ?statement (ps:P39/(wdt:P279+)) wd:Q4416090;
+        (ps:P39/p:P31/pq:P4649/wdt:P31) wd:Q15238777;
+        ps:P39 ?position.
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+    #+end_src
+
+  - Here are all the =position held= =United States senator= items without a =legislative term=.
+    #+begin_src sql
+    SELECT ?sen ?senLabel ?statement WHERE {
+      ?sen wdt:P39 wd:Q4416090;
+        p:P39 ?statement.
+      ?statement ps:P39 wd:Q4416090.
+      FILTER(NOT EXISTS { ?statement pq:P2937 ?term. })
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+    #+end_src
+  - Here are all the =position held= =United States senator= items which have duplicates.
+    #+begin_src sql
+    SELECT * WHERE {
+    {SELECT ?sen ?senLabel ?termLabel (COUNT( ?statement) as ?cnt ) WHERE {
+      ?sen wdt:P39 wd:Q4416090;
+        p:P39 ?statement.
+      ?statement ps:P39 wd:Q4416090;
+       pq:P2937 ?term.
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    } group by ?sen ?term ?senLabel ?termLabel }
+    FILTER ( ?cnt > 1 )
+    }
+    #+end_src
+
+*** DONE Figure out what's missing from old upload to full upload.
     SCHEDULED: <2020-11-01 Sun>
     :PROPERTIES:
     :ID:       C0A20768-0E84-4E14-B5CE-061DC1F15215
     :END:
   
+*** TODO Change [[https://www.wikidata.org/wiki/Property:P768][electoral district]] to reflect the class of the senate seat.
+  This was [[https://www.wikidata.org/wiki/Wikidata:Project_chat#Representing_United_States_Senate_classes][discussed]] on Wikidata's project chat.  I've generated [[https://www.wikidata.org/wiki/Help:QuickStatements][QuickStatements]] to create the [[file:~/Anki/Anki-dm/wikidata/state-classes.qs][new
+  items]].  This was pretty straightforward in [[https://openrefine.org/documentation.html][OpenRefine]] using the [[https://github.com/gitonthescene/wikidata/blob/master/every_politician/United_States_of_America/Senate/stateclasses.tsv][table of state classes]].
+
+*** Add references to [[https://www.wikidata.org/wiki/Property:P1157][US Congress Bio ID]] as in [[https://www.wikidata.org/wiki/Q5235859#Q5235859$6D31F8C0-F6C1-4289-A5AF-2001BBC64161][this statement]].
 
 * Useful links
   - [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][emacs reference card]]
