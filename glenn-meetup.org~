@@ -1,0 +1,66 @@
+* Weekly meeting
+  SCHEDULED: <2020-11-01 Sun 09:00 +1w>
+  :PROPERTIES:
+  :ID:       50F4FB7A-752E-4C67-94D9-3FF43BF14183
+  :END:
+  [[https://meet.google.com/ody-sudr-hem][Google meetup]]
+
+* Glenn's tasks
+** Get familiar with Emacs
+  [[info:Emacs][Emacs introduction]]
+
+*** TODO Short term goals ( week 1 )
+    DEADLINE: <2020-11-01 Sun>
+    :PROPERTIES:
+    :ID:       22EB1B14-53EA-4176-B875-2ACE0EC880FE
+    :END:
+
+  - Create a buffer
+  - Save a file
+
+*** Learn Org Mode
+  [[info:org][Org Mode manual]]
+
+  
+* Doug's tasks
+** Manage weekly meeting
+*** DONE Fix settings to share screen in Google Meetup.
+
+*** DONE Create repository for this.
+    DEADLINE: <2020-10-26 Mon>
+    :PROPERTIES:
+    :ID:       897CEA32-164A-43A8-8268-5BC30AE2347C
+    :END:
+  To keep in sync with our goals let's use an org mode file shared on GitHub.  This doc is found in
+  [[https://github.com/gitonthescene/task-checkin][this repository]].
+
+** Wikidata Senators
+  This is a project to upload all historical senator data from [[https://bioguideretro.congress.gov/][US government sources]] to [[https://www.wikidata.org/wiki/Wikidata:WikiProject_every_politician/United_States_of_America][Wikidata]].
+  The data has been collected and uploaded to [[https://github.com/gitonthescene/wikidata/tree/master/every_politician/United_States_of_America/Senate][GitHub]].  Some processing was done using [[https://openrefine.org/documentation.html][OpenRefine]] and
+  then subsequently uploaded to Wikidata with a basic schema.  (E.g. The [[https://www.wikidata.org/wiki/Q359442][Bernie Sanders]] has listings
+  under [[https://www.wikidata.org/wiki/Q359442#Q359442$2E8E9668-A248-447D-A12D-EC8B8C34DF5C][position held]]).  The latest upload lists =position held= as [[https://www.wikidata.org/wiki/Q4416090][United States senator]] and lists a
+  [[https://www.wikidata.org/wiki/Property:P2937][parliamentary term]].  Older style entries were not as comprehensive and are either missing
+  parliamentary term or list =position held= with the more specific form [[https://www.wikidata.org/wiki/Q980774cl91][United States senator (116th
+  Congress)]].  The goal is to consolidate all of these entries into a single form and ideally
+  automate a process for keeping this information up-to-date.
+
+*** Wikidata SPARQL queries
+  You can search through Wikidata using a [[https://query.wikidata.org/][SPARQL query]].
+
+  - Here are all the =position held= statements for Bernie Sanders:
+    #+begin_src sql
+    SELECT ?statement ?val ?unitLabel WHERE {
+      wd:Q359442 p:P39 ?statement.
+      ?statement ps:P39/wd:Q21514624* wd:Q4416090.
+    }
+    #+end_src
+
+*** TODO Figure out what's missing from old upload to full upload.
+    SCHEDULED: <2020-11-01 Sun>
+    :PROPERTIES:
+    :ID:       C0A20768-0E84-4E14-B5CE-061DC1F15215
+    :END:
+  
+
+* Useful links
+  - [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][emacs reference card]]
