@@ -176,12 +176,89 @@
     :PROPERTIES:
     :ID:       C0A20768-0E84-4E14-B5CE-061DC1F15215
     :END:
-  
+  !
 *** TODO Change [[https://www.wikidata.org/wiki/Property:P768][electoral district]] to reflect the class of the senate seat.
   This was [[https://www.wikidata.org/wiki/Wikidata:Project_chat#Representing_United_States_Senate_classes][discussed]] on Wikidata's project chat.  I've generated [[https://www.wikidata.org/wiki/Help:QuickStatements][QuickStatements]] to create the [[file:~/Anki/Anki-dm/wikidata/state-classes.qs][new
   items]].  This was pretty straightforward in [[https://openrefine.org/documentation.html][OpenRefine]] using the [[https://github.com/gitonthescene/wikidata/blob/master/every_politician/United_States_of_America/Senate/stateclasses.tsv][table of state classes]].
 
-*** Add references to [[https://www.wikidata.org/wiki/Property:P1157][US Congress Bio ID]] as in [[https://www.wikidata.org/wiki/Q5235859#Q5235859$6D31F8C0-F6C1-4289-A5AF-2001BBC64161][this statement]].
+*** DONE Add references to [[https://www.wikidata.org/wiki/Property:P1157][US Congress Bio ID]] as in [[https://www.wikidata.org/wiki/Q5235859#Q5235859$6D31F8C0-F6C1-4289-A5AF-2001BBC64161][this statement]].
+
+*** Add appropriate end cause for the oddball cases.
+  These senators are the oddball cases.  Either never seated or disqualified.
+    #+begin_src
+    wd:Q500046	Albert Gallatin
+    wd:Q327388	Michael Hahn
+    wd:Q4803331	Asahel C. Beckwith
+    wd:Q6222555	William Scott Vare
+    #+end_src
+
+  Should put in an appropriate end cause.  This lists them all:
+    #+begin_src sql
+    SELECT DISTINCT ?cause ?causeLabel WHERE {
+      ?subj pq:P1534 ?cause;
+            ps:P39 ?obj.
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+    #+end_src
+
+  - For Gallatin, perhaps ~wd:Q1229261 disqualification~?
+  - For all appointed Senators who were not re-elected maybe ~wd:Q22087114 not re-elected~??
+    #+begin_src sql
+    SELECT * WHERE {
+      VALUES ?bioid {
+        "W000059" "W000114" "N000142" "T000086" "J000220" "G000489" "B001051" "W000324" "P000322" "E000136"
+        "H000226" "R000378" "B000058" "F000304" "M000889" "B000168" "W000646" "S000905" "F000174" "M000596"
+        "M000650" "R000368" "C000656" "F000174" "W000138" "B000960" "F000106" "S000809" "W000609" "J000103"
+        "W000629" "C000952" "E000185" "P000530" "A000279" "B000331" "P000557" "E000046" "H000428" "C000343"
+        "M000165" "C000357" "J000063" "P000141" "T000324" "R000450" "G000112" "B000386" "S000917" "E000109"
+        "P000570" "H000457" "S000038" "M000229" "J000196" "Y000046" "P000238" "J000030" "W000305" "D000495"
+        "G000522" "B000360" "W000471" "C000657" "R000075" "F000069" "A000028" "B001196" "W000499" "C001028"
+        "G000510" "B000053" "A000126" "M000392" "S001060" "M000993" "W000069" "P000091" "C000597" "E000202"
+        "T000225" "L000400" "B000389" "H000612" "H000646" "R000099" "M000787" "B000417" "S000478" "B001061"
+        "B000099" "R000443" "W000096" "J000026" "W000248" "H000913" "S001117" "S000792" "B001069" "D000522"
+        "L000173" "D000048" "P000575" "S000517" "B000966" "M000236" "F000438" "C001099"
+      }
+      ?sen p:P39 ?ps;
+        wdt:P1157 ?bioid.
+      ?ps ps:P39 wd:Q4416090;
+        pq:P2937 ?term;
+        pq:P582 ?end;
+        pq:P580 ?start.
+      ?term wdt:P580 ?termStart;
+        wdt:P582 ?termEnd;
+        (p:P31/pq:P1545) ?termNum.
+
+      BIND(URI(CONCAT("https://bioguideretro.congress.gov/Home/MemberDetails?memIndex=", ?bioid)) AS ?bioURL)
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+    ORDER BY (xsd:integer(?termNum))
+    #+end_src
+  - I think there are cases of ~wd:Q25235916 election result invalidated~.
+
+*** Collect district info from [[https://github.com/JeffreyBLewis/congressional-district-boundaries.git][congressional district maps]]
+   This github site has geojson files with the shapes of all the historical congressional
+   districts.  In addition they've collected info about which representatives served in those
+   districts for which terms.  This should be a nice supplement to the info available from the
+   [[https://bioguideretro.congress.gov/][Biographical Directory]].  Extracting from json is easier using [[https://stedolan.github.io/jq/manual/][jq]].
+
+   I used the following pipeline:
+   #+begin_src sh
+   $ cat *.geojson | jq -r '.features[].properties | \
+                            { statename: .statename, member: [ .member | to_entries ][0][]  } | \
+                            { state: .statename, congress: .member.key, member: [.member.value| to_entries][0][].value } | \
+                            { state: .state, congress: .congress, party: .member.party, name: .member.name, district: .member.district } '
+   #+end_src
+
+**** Note that for two files the format of the congressional information is different.
+     The files ~South_Carolina_104_to_107.geojson~ and ~South_Carolina_108_to_112.geojson~ have
+     member information formatted slightly differently.  I should get in touch with the author to
+     point that out.  In fact, no time like the present.  I've [[https://github.com/JeffreyBLewis/congressional-district-boundaries/issues/6][opened an issue]].
+
+*** Just discovered a git repository covering similar ground.
+   [[https://github.com/unitedstates/congress-legislators][congress-legislators]]
+
+
+*** No Wiki entry for [[https://www.nytimes.com/1990/08/23/obituaries/george-chambers-87-lost-disputed-election.html][George O. Chambers!]]
 
 * Useful links
   - [[https://www.gnu.org/software/emacs/refcards/pdf/refcard.pdf][emacs reference card]]
