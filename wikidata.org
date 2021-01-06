@@ -60,7 +60,7 @@ find all of them.
   there's a difference between being the concept of a lake and being a lake.  This is why we're
   looking for "instances of" lake.
 
-  Then if we type ~?lake wdt:P31 wd:lake [Ctrl-space]~ we find the entity id for lake which is
+  Then if we type ~?lake wdt:P31 wd:lake [Ctrl-space]~ we find the entity id for ~lake~ which is
   ~wd:Q23397~.  Again, these names are meaningless to make it clear that the meaning is not in the
   objects, but how we map our understanding onto these objects.
 
@@ -105,6 +105,15 @@ find all of them.
     ?item wdt:P17 wd:Q30.
     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
   }
+  #+end_src
+
+  output:
+  #+begin_src txt
+  item        itemLabel
+  wd:Q2431499	Kintla Lake
+  wd:Q2433031	Tikchik Lake
+  wd:Q2451846	Manzanita Lake
+  ...
   #+end_src
 
 ** Chaining
@@ -153,7 +162,7 @@ find all of them.
   #+begin_src sql
   SELECT ?item ?itemLabel ?lakeLikeLabel WHERE {
     ?item wdt:P31 ?lakeLike.
-    ?lakeLike wdt:P279? wd:Q23397.
+    ?lakeLike wdt:P279* wd:Q23397.
     ?item wdt:P17 wd:Q30.
 
     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
