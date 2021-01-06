@@ -1,0 +1,174 @@
+* Overview
+As mentioned on the [[https://www.wikidata.org/wiki/Wikidata:Main_Page][main page]], Wikidata acts as a central storage for *structured data*.  In
+broadstrokes Wikipedia is for prose data Wikidata is for machine processable data.
+
+* Structured data
+There are different mental models one can use with structured data, but one way to think of it is as
+a giant graph with nodes and edges. Information is broken down into simple "facts" which are
+represented as edges connecting two nodes and implied information can be derived by following edges
+from one node to the next.
+
+We map real world information onto this model by assigning a unique name for everything we want to
+collect facts about as well as a unique name for all possible edges in our graph.  We need nodes to
+be unique because we want to have a clear verifiable item that a computer can blindly assume is the
+data we're talking about.
+
+In the real world, information is often less clear than this model.  Is Sean Combs the same person
+as Puff Daddy?  Is Great Britain different than the United Kingdom?  Picking real world names can
+lead to debates which are better put off until later in the model.  That is we choose names for our
+model which are basically meaningless and then try to cover real world ambiguities by applying the model.
+
+* Statements
+An edge with its two nodes can be thought of as being a triple (usually we think of this as ~(node1,
+edge, node2)~).  These triples can be thought of as simple statements where ~node1~ is the subject,
+~edge~ is the verb and ~node2~ is the object.  So "Fido is a dog" is a simple statement.  "Lake
+Huron is located at such-and-such coordinates" is another simple statement.  The inference that
+comes from following edges can be demonstrated by simple sylogisms: "Lake Huron is a lake" and "A
+lake is a body of water" allows us to infer that "Lake Huron is a body of water".
+
+* Querying the data store
+Querying of wikidata's "triple store" is done with a language called [[https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/Wikidata_Query_Help][SPARQL]].  The basic idea here is
+that you provide a list of variables which are mapped to nodes in the graph and a bunch of
+constraints on those nodes and [[https://query.wikidata.org/][the SPARQL service]] returns all the nodes in the graph which satisfy
+those constraints.  Now, the graph is enormous.  Understanding abstractly how we'd like things to
+work doesn't make real world issues go away.  If you don't provide enough constraints, there may be
+way to many nodes which satisfy them and the SPARQL service will eventually give up on trying to
+find all of them.
+
+** The "free" variable.
+  As a first example, we'll ask the SPARQL service for all lakes in the United States.  In the
+  language of our model above, we'll provide two constraints: "X is lake" and "X is in the United
+  States".  Variables in SPARQL are strings of letters starting with a ~?~.  We'll use ~?item~.
+  These variables are often called "free" variables because they are not "bound" to specific values.
+  We're searching for any value that we can substitute into that variable and still satisfy all the
+  constraints.
+
+** The "ontology"
+  we'll need to find out how to express "is" and "lake".  This can be the trickiest part of using a
+  data store you're unfamiliar with, because as we said, the names are usually meaningless.  There's
+  no way around having to figure out what terms this data set uses for what concepts.  This is known
+  as an "ontology".  Luckily [[https://query.wikidata.org/][the SPARQL service]] has some features to make some of this easier.
+
+  First, to simplify matters, all "edges" start with a prefix ~wdt:~ and all nodes start with the
+  prefix ~wd:~.  ( The model is actually more complicated than this, but we'll take this as a fact
+  for now. )  Note that this is true for Wikidata's ontology.  There are other triple stores which
+  use different conventions.
+
+  The SPARQL service has auto completion to help you find the actual "entities" (i.e. nodes) we're
+  looking for.  So if you start typing ~?lake wdt:instance [Ctrl-space]~ you're presented with a
+  list of options.  In this case what we're looking for is ~wdt:P31~ for ~instance of~.  Note that
+  there's a difference between being the concept of a lake and being a lake.  This is why we're
+  looking for "instances of" lake.
+
+  Then if we type ~?lake wdt:P31 wd:lake [Ctrl-space]~ we find the entity id for lake which is
+  ~wd:Q23397~.  Again, these names are meaningless to make it clear that the meaning is not in the
+  objects, but how we map our understanding onto these objects.
+
+** Running the query
+  That's our first constraint!  Our second constraint "item country United States" is found
+  similarly.  To make a query out of this we wrap it in a ~SELECT~ statement as follows:
+
+  #+begin_src sql
+  SELECT ?item WHERE {
+    ?item wdt:P31 wd:Q23397.
+    ?item wdt:P17 wd:Q30.
+  }
+  #+end_src
+
+  Running this in the SPARQL service returns 22540 results as of the time of this writing.  Here's a sample of them:
+  #+begin_src txt
+  item
+  wd:Q337
+  wd:Q1062
+  wd:Q1169
+  wd:Q1383
+  ...
+  #+end_src
+
+  What's nice about the service is that these are returned as links to the full entry for that
+  entity in Wikidata.  So you can click on [[https://www.wikidata.org/wiki/Q337][wd:Q337]] and be take to "Lake Chaubunagungamaug".
+
+** Labels
+  While the links are nice, it would be cool if we just had some more easily readable output.  This
+  is a bit of a thorny issue.  Readable by who?  In what language?  What if there are multiple aliases?
+  Still, while the full generality may be complicated why can't we just get "something" back?
+
+  The SPARQL service offers a tool known as a ~SERVICE~ which uses some heuristics to wade through
+  the thorny issues to produce a label.  For now we'll just take this as a black box.  You simply
+  add the ~SERVICE~ line below and then adding ~Label~ to the end of any of our variables produces a
+  human readable string.
+
+  e.g.
+  #+begin_src sql
+  SELECT ?item ?itemLabel WHERE {
+    ?item wdt:P31 wd:Q23397.
+    ?item wdt:P17 wd:Q30.
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  }
+  #+end_src
+
+** Chaining
+  Now we've found all the lakes which are marked as "instances of lake".  But what about specific
+  kinds of lakes, like a glatial lake?  We can of course look specifically for glatial lake, but
+  what if we didn't care?  Would we have to mark each glatial lake as *both* an instace of "glatial
+  lake" *and* an instance of "lake?  We could do that.  But we can also take advantage of inference
+  by simply adding an edge to "glatial lake" to indicate that it is a "subclass of" lake.  Then for
+  all lakes which are instances of a glatial lake we could follow that inference to see that a
+  glatial lake is also a lake.
+
+  Here's what that looks like.  We find all "instances of a lakeLike item" where "lakeLike is a
+  subclass of lake".
+
+  #+begin_src sql
+  SELECT ?item ?itemLabel ?lakeLikeLabel WHERE {
+    ?item wdt:P31 ?lakeLike.
+    ?item wdt:P17 wd:Q30.
+    ?lakeLake wdt:P279 wd:Q23397.
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  }
+  #+end_src
+
+  Neat!  But now we're missing things which are just lakes because our constraints say we're looking
+  for things which are a "subclass of lake".
+
+  There are several ways around that, but the simplest is to use the ~?~ *suffix* to the "property"
+  name (i.e. edge name).  This ~?~ says we want "zero or one instance of this edge.  Here zero
+  instances means that the subject actually is the object.  In other words, ~wdt:P279?~ means we're
+  looking for things which are either lakes or a subclass of a lake.
+
+  #+begin_src sql
+  SELECT ?item ?itemLabel ?lakeLikeLabel WHERE {
+    ?item wdt:P31 ?lakeLike.
+    ?lakeLike wdt:P279? wd:Q23397.
+    ?item wdt:P17 wd:Q30.
+
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  }
+  #+end_src
+
+  Of course if you can be a subclass of a lake you can be a subclass of a subclass of a lake.  There
+  are more suffixes to handle these sorts of cases.  ~*~ means "zero or more" and ~+~ means one or
+  more.
+  
+  #+begin_src sql
+  SELECT ?item ?itemLabel ?lakeLikeLabel WHERE {
+    ?item wdt:P31 ?lakeLike.
+    ?lakeLike wdt:P279? wd:Q23397.
+    ?item wdt:P17 wd:Q30.
+
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  }
+  #+end_src
+
+  Lastly, this can be expressed more succinctly using "chaining". A constraint like ~?subj
+  prop1/prop2 ?target~ is equivalent to two constraints ~?subj prop1 ?middle~ and ~?middle prop2
+  ?target~.  One thing to notice is that you're not using the variable ~?middle~ with this succinct
+  expression, which means you can't return it as output.  But if you don't need to this might be useful.
+
+  #+begin_src sql
+  SELECT ?item ?itemLabel WHERE {
+    ?item wdt:P31/wdt:P279* wd:Q23397.
+    ?item wdt:P17 wd:Q30.
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  }
+  #+end_src
